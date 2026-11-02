@@ -60,10 +60,10 @@ Not offered, merged or withdrawn (ids in --json): npm/typescript 6 merged, 5 wit
 | `unknown` | no version known, or a range that does not include a checked version | `lead` |
 | `not_affected` | your version is not newer than `works_on`, where the old code works | `none` (shown with `--all`) |
 
-The site's rule, printed in every page footer and in `llms.txt`: *apply a correction on your own only when its
-`versions.fails_on` is not newer than the installed version and its `proof.auto_apply` is true; otherwise show it to
-the user as a lead.* The CLI reads it strictly until the base proves version ranges: one checked version is not a
-range, so a newer installed version is `lead`, not `apply`.
+The rule, the same on the site (every page footer, `llms.txt`, the JSON `agent_rule`), in the skill and in the MCP
+server: *apply a correction on your own only when the installed version is one it was checked on
+(`versions.checked_on`: `fails_on` and every recheck) and its `proof.auto_apply` is true; otherwise show it to the user
+as a lead.* One checked version is not a range, so a newer installed version is `lead`, not `apply`.
 
 ## Reporting back
 
