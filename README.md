@@ -28,7 +28,7 @@ A lockfile wins over a manifest for the same package. A range is never turned in
 On the control project in `test/fixtures/control` (the six cases below), against the live base on 2026-11-02:
 
 ```
-errata 0.1.0: 9 dependencies from package-lock.json, package.json, uv.lock, requirements.txt; 5 have corrections in the base
+errata 0.1.1: 9 dependencies from package-lock.json, package.json, uv.lock, requirements.txt; 5 have corrections in the base
 
 verdict  package         installed          checked on  entry                       grade     link
 -------  --------------  -----------------  ----------  --------------------------  --------  ------------------------------------------------------------

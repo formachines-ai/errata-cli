@@ -1,6 +1,6 @@
 {
   "name": "@formachines/errata",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Check your project's dependencies against Errata: sandbox-verified fixes where AI models write outdated code for PyPI and npm libraries",
   "license": "MIT",
   "type": "module",
