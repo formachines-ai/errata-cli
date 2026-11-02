@@ -33,7 +33,7 @@ Usage:
 
 check reads package.json, package-lock.json, requirements.txt, uv.lock, poetry.lock in [path] (default: .).
 Exit codes: 0 done, 1 --fail-on matched, 2 the base could not be read, 64 usage.
-Environment: ERRATA_BASE_URL, ERRATA_FEEDBACK_URL, ERRATA_TIMEOUT_MS, ERRATA_CACHE_TTL_S, ERRATA_LOG_LEVEL.`;
+Environment: ERRATA_BASE_URL, ERRATA_FEEDBACK_URL, ERRATA_TIMEOUT_MS, ERRATA_CACHE_TTL_S, ERRATA_LOG_LEVEL, ERRATA_NO_TELEMETRY.`;
 
 async function mapLimit<T, R>(items: T[], n: number, f: (x: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);

@@ -28,7 +28,7 @@ A lockfile wins over a manifest for the same package. A range is never turned in
 On the control project in `test/fixtures/control` (the six cases below), against the live base on 2026-11-02:
 
 ```
-errata 0.1.1: 9 dependencies from package-lock.json, package.json, uv.lock, requirements.txt; 5 have corrections in the base
+errata 0.1.2: 9 dependencies from package-lock.json, package.json, uv.lock, requirements.txt; 5 have corrections in the base
 
 verdict  package         installed          checked on  entry                       grade     link
 -------  --------------  -----------------  ----------  --------------------------  --------  ------------------------------------------------------------
@@ -89,15 +89,18 @@ is never reported as "no corrections" · `64` usage.
 | `ERRATA_TIMEOUT_MS` | `8000` per request |
 | `ERRATA_CACHE_TTL_S` | `600` (in-process cache) |
 | `ERRATA_LOG_LEVEL` | `error` (`debug`, `info`, `warn`; logs go to stderr) |
+| `ERRATA_NO_TELEMETRY` | unset; `1` (or `DO_NOT_TRACK=1`) turns off search-miss reports |
 
 Requests carry the User-Agent `formachines-errata-cli/<version>`, so the site counts CLI traffic apart from other
-clients. No other data is sent.
+clients. No other data is sent: the CLI has no error search, so it never sends search-miss reports (the MCP server's
+`search_error` does, see its README); `ERRATA_NO_TELEMETRY=1` would stop them if it ever gets one.
 
 ## Overhead
 
 Measured 2026-11-02 on the control project (9 dependencies, 5 with corrections) against formachines.ai, five cold
-runs on one Mac: **6 requests** (index, changelog, 4 package JSONs), **64.6 kB** downloaded (the server sends JSON
-uncompressed; the changelog is 31 kB of it), **0.30–0.34 s** in requests, **0.37–0.43 s** wall time for the whole
+runs on one Mac: **6 requests** (index, changelog, 4 package JSONs), **64.6 kB** of JSON (the changelog is 31 kB of
+it; the summary line counts uncompressed bytes). Since 2026-11-02 the site sends JSON gzipped: on the same project
+70.5 kB of JSON came over the wire as **14.4 kB**; **0.30–0.34 s** in requests, **0.37–0.43 s** wall time for the whole
 `npx`-less run. The table is 1.7 kB of output, `--json` 9.8 kB. Requests grow with the number of dependencies that
 have corrections (one package JSON each), not with the size of the lockfile.
 
