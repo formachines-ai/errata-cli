@@ -1,0 +1,50 @@
+{
+  "name": "@formachines/errata",
+  "version": "0.1.0",
+  "description": "Check your project's dependencies against Errata: sandbox-verified fixes where AI models write outdated code for PyPI and npm libraries",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "errata": "dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "errata",
+    "outdated-code",
+    "llm",
+    "ai-agents",
+    "pypi",
+    "npm",
+    "lockfile",
+    "cli"
+  ],
+  "homepage": "https://formachines.ai/errata/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/formachines-ai/errata-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/formachines-ai/errata-cli/issues"
+  },
+  "author": "formachines.ai",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "esbuild src/bin.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/bin.js",
+    "typecheck": "tsc -p .",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

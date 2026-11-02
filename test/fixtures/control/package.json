@@ -1,0 +1,12 @@
+{
+  "name": "errata-control-project",
+  "private": true,
+  "dependencies": {
+    "typescript": "^7.0.0",
+    "typeorm": "1.1.2",
+    "left-pad": "^1.3.0"
+  },
+  "devDependencies": {
+    "build-helper": "^2.0.0"
+  }
+}

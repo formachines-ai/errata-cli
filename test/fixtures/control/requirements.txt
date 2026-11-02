@@ -1,0 +1,10 @@
+# Control project for errata check (D9): six cases
+#  1 exact version from a lockfile ........ click 8.5.0 (uv.lock), typeorm 1.1.2 (package-lock.json)
+#  2 range without a lockfile ............. scipy (only here, not in uv.lock)
+#  3 two versions of one package .......... typescript 7.0.2 and 6.0.2 (package-lock.json)
+#  4 unknown package ...................... left-pad, httpx
+#  5 withdrawn entry ...................... openai 3.35.1 (its only entry was withdrawn 2026-10-23)
+#  6 base unavailable ..................... ERRATA_BASE_URL pointing nowhere
+click>=8.3
+openai==3.35.1
+scipy>=1.17,<2  ; python_version >= "3.11"
