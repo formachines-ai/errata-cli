@@ -1,5 +1,7 @@
 # @formachines/errata
 
+> **Not maintained.** Errata was stopped on 10 November 2026. The database at formachines.ai/errata is frozen as of that date: new releases and existing entries are no longer checked. This repository is archived and kept for reference; do not rely on it for current code.
+
 Check a project's dependencies against [Errata](https://formachines.ai/errata/): places where AI models write
 outdated code for PyPI and npm libraries, each with a fix verified in a sandbox.
 
