@@ -6,7 +6,7 @@ import { parseArgs } from "node:util";
 import { createInterface } from "node:readline/promises";
 import {
   AGENT_RULE, CLIENT_RULE, ErrataClient, ErrataUnavailable, PackageResult, checkPackage, optionsFromEnv, planReport,
-  sendReport, MAX_NOTE,
+  sendReport, summarize, summaryLines, MAX_NOTE,
 } from "./core/index.js";
 import { discover } from "./deps.js";
 import { VERSION } from "./version.js";
@@ -114,33 +114,33 @@ async function check(path: string, o: any, io: Io, client: ErrataClient, log: (l
   const excluded = results.flatMap((r) => r.excluded.map((x) => ({ r, x }))).filter(({ x }) => !seen.has(x.id) && !!seen.add(x.id));
   const covered = results.filter((r) => r.coverage === "covered");
   const overhead = { ms, requests: client.stats.requests, bytes: client.stats.bytes, cache_hits: client.stats.cacheHits };
+  const summary = summarize(results);                 // FB-4: the five lines first
+  log("info", `summary: ${JSON.stringify(summary)}`);
   log("info", `overhead: ${JSON.stringify(overhead)}`);
 
   if (o.json) {
     io.out(JSON.stringify({
       status: shown.length ? "found" : "none", tool: USER_AGENT, root: found.root, files: found.files,
-      dependencies: found.deps.length, covered: covered.length, rule: AGENT_RULE, client_rule: CLIENT_RULE,
+      dependencies: found.deps.length, covered: covered.length, summary, summary_lines: summaryLines(summary),
+      rule: AGENT_RULE, client_rule: CLIENT_RULE,
       entries: shown.map(({ r, e }) => ({ ecosystem: r.ecosystem, package: r.package, installed: installedText(r), ...e })),
       not_offered: excluded.map(({ r, x }) => ({ package: `${r.ecosystem}/${r.package}`, installed: installedText(r), ...x })),
       warnings: found.warnings, overhead,
     }, null, 2));
   } else {
-    io.out(`errata ${VERSION}: ${found.deps.length} dependencies from ${found.files.join(", ")}; ` +
-      `${covered.length} ${covered.length === 1 ? "has" : "have"} corrections in the base`);
+    io.out(`errata ${VERSION}: read ${found.files.join(", ")}\n\n` + summaryLines(summary).join("\n"));
     if (shown.length) {
-      const rows = [["verdict", "package", "installed", "checked on", "entry", "grade", "link"]];
+      const rows = [["verdict", "readiness", "package", "installed", "checked on", "entry", "grade", "link"]];
       const order = { apply: 0, lead: 1, none: 2 } as const;
       shown.sort((a, b) => order[a.e.verdict] - order[b.e.verdict] || a.r.package.localeCompare(b.r.package));
       for (const { r, e } of shown) {
-        rows.push([e.verdict, `${r.ecosystem}/${r.package}`, installedText(r), e.verified_on.join(", "),
+        rows.push([e.verdict, e.readiness, `${r.ecosystem}/${r.package}`, installedText(r), e.verified_on.join(", "),
           `${e.symbol ?? ""} (${e.id.split("/").pop()})`, e.grade, e.url]);
       }
       io.out("\n" + table(rows));
       io.out(`\napply = checked on your installed version and proof.auto_apply is true; lead = may apply, review first ` +
-        `or show to a person; the reason for each is in --json.`);
-    } else {
-      io.out("\nNo correction applies to the versions found. That is not proof the code is current: the base covers " +
-        `${covered.length ? "only some" : "none"} of these packages.`);
+        `or show to a person. readiness: patch = the short patch applies word for word; partial = it covers part of ` +
+        `the change; lead = it does not apply word for word, the entry has a full example. Reasons are in --json.`);
     }
     const hidden = results.reduce((n, r) => n + r.entries.filter((e) => e.verdict === "none").length, 0);
     if (hidden && !o.all) io.out(`\n${hidden} ${hidden === 1 ? "entry does" : "entries do"} not apply: the installed version predates the change (--all shows them).`);

@@ -7,6 +7,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync, spawn } from "node:child_process";
 import { run, Io, EXIT, USER_AGENT } from "../src/main.js";
+import { NO_MATCH_NOTE } from "../src/core/index.js";
 import { discover, fromRequirements, fromTomlLock, fromPackageLock } from "../src/deps.js";
 import { VERSION } from "../src/version.js";
 import { snapshotFetch, serveSnapshot, deadUrl, Recorded } from "./helpers.js";
@@ -101,12 +102,39 @@ describe("control project: six cases", () => {
   });
 });
 
+describe("five-line summary (FB-4)", () => {
+  it("opens the text output and the JSON with the same counts and the closing note", async () => {
+    const t = io();
+    expect(await run(["check", CONTROL], t.io)).toBe(EXIT.OK);
+    const lines = t.out.join("\n").split("\n");
+    const k = lines.findIndex((l) => l.startsWith("Dependencies found: "));
+    expect(k).toBeGreaterThan(0);
+    expect(lines[k]).toBe("Dependencies found: 9, 8 with an exact version");
+    expect(lines[k + 1]).toBe("In Errata: 5 of them");
+    expect(lines[k + 2]).toMatch(/^Match your versions: \d+ entries — \d+ patch, \d+ partial, \d+ lead$/);
+    expect(lines[k + 3]).toMatch(/^Need a person: \d+ to apply once your code is seen to use the changed name \(detect\), \d+ for a manual decision \(lead\)$/);
+    expect(lines[k + 4]).toBe("Not covered: 4 dependencies");
+    expect(lines[k + 5]).toBe(NO_MATCH_NOTE);
+    const j = io();
+    await run(["check", CONTROL, "--json"], j.io);
+    const body = JSON.parse(j.out[0]);
+    const m = body.summary.matching;
+    expect(body.summary).toMatchObject({ dependencies: 9, exact: 8, covered: 5, not_covered: 4, note: NO_MATCH_NOTE });
+    expect(m.patch + m.partial + m.lead).toBe(m.entries);
+    expect(body.summary.to_check.usage + body.summary.to_check.manual).toBe(m.entries);
+    expect(m.entries).toBe(body.entries.filter((e: any) => e.verdict !== "none").length);
+    expect(body.summary_lines.slice(0, 6)).toEqual(lines.slice(k, k + 6));
+    expect(body.entries.find((e: any) => e.package === "click")).toMatchObject({ verdict: "apply", readiness: "patch" });
+    expect(body.entries.find((e: any) => e.package === "typeorm")).toMatchObject({ verdict: "lead", readiness: "partial" });
+  });
+});
+
 describe("table, flags, report", () => {
   it("table names verdicts and links; overhead line; --fail-on", async () => {
     const t = io();
     expect(await run(["check", CONTROL], t.io)).toBe(EXIT.OK);
     const s = t.out.join("\n");
-    expect(s).toMatch(/apply\s+pypi\/click\s+8\.5\.0/);
+    expect(s).toMatch(/apply\s+patch\s+pypi\/click\s+8\.5\.0/);
     expect(s).toContain("https://formachines.ai/errata/pypi/click/0001-click-parameter/");
     expect(s).toMatch(/\d+ requests, [\d.]+ kB, [\d.]+ s/);
     expect(await run(["check", CONTROL, "--fail-on", "apply"], io().io)).toBe(EXIT.FOUND);

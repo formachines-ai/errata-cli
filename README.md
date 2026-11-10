@@ -7,8 +7,16 @@ outdated code for PyPI and npm libraries, each with a fix verified in a sandbox.
 npx @formachines/errata check
 ```
 
-Node 20 or newer. No API key and no account. Nothing about your project leaves your machine: the CLI downloads the
-public index and the JSON of the packages that have corrections, and matches versions locally.
+Node 20 or newer. No API key and no account.
+
+| | |
+|---|---|
+| Executes fix examples | never |
+| Reads | lockfiles and manifests |
+| Sends | package names to fetch entries (versions are matched locally); no search-miss reports (the MCP server's `search_error` sends them, off: `ERRATA_NO_TELEMETRY=1`) |
+
+The CLI downloads the public index and the JSON of the packages that have corrections (the package name is in the
+URL) and matches versions on your machine; it has no error search, so it sends no search-miss reports.
 
 ## What it reads
 
@@ -25,30 +33,36 @@ A lockfile wins over a manifest for the same package. A range is never turned in
 
 ## Output
 
-On the control project in `test/fixtures/control` (the six cases below), against the live base on 2026-11-02:
+On the control project in `test/fixtures/control` (the six cases below), against the live base on 2026-11-09. The first five lines are the summary (since 0.1.3): dependencies read and how many have an exact version; how many Errata covers; the entries that match your versions, by readiness (`patch`: the short patch applies word for word; `partial`: it covers part of the change; `lead`: it does not apply word for word, the entry has a full example that works); how many need a person — to confirm your code uses the changed name (`detect`) before applying, or to decide on a lead; and the dependencies Errata does not cover. The last line says what a miss means.
 
 ```
-errata 0.1.2: 9 dependencies from package-lock.json, package.json, uv.lock, requirements.txt; 5 have corrections in the base
+errata 0.1.3: read package-lock.json, package.json, uv.lock, requirements.txt
 
-verdict  package         installed          checked on  entry                       grade     link
--------  --------------  -----------------  ----------  --------------------------  --------  ------------------------------------------------------------
-apply    pypi/click      8.5.0              8.5.0       click.Parameter (0001)      verified  https://formachines.ai/errata/pypi/click/0001-click-parameter/
-lead     pypi/scipy      >=1.17,<2 (range)  1.18.1      scipy.optimize.nnls (0001)  possible  https://formachines.ai/errata/pypi/scipy/0001-scipy-optimize-nnls/
-lead     pypi/scipy      >=1.17,<2 (range)  1.18.1      scipy.linalg.sqrtm (0003)   possible  https://formachines.ai/errata/pypi/scipy/0003-scipy-linalg-sqrtm/
-lead     npm/typeorm     1.1.2              1.1.2       Connection (0001)           verified  https://formachines.ai/errata/npm/typeorm/0001-connection/
-lead     npm/typescript  7.0.2              7.0.2       ts.ScriptTarget (0001)      verified  https://formachines.ai/errata/npm/typescript/0001-baseurl/
-lead     npm/typescript  7.0.2              7.0.2       ts.ModuleKind (0004)        verified  https://formachines.ai/errata/npm/typescript/0004-moduleresolution-node/
+Dependencies found: 9, 8 with an exact version
+In Errata: 5 of them
+Match your versions: 5 entries — 2 patch, 1 partial, 2 lead
+Need a person: 1 to apply once your code is seen to use the changed name (detect), 4 for a manual decision (lead)
+Not covered: 4 dependencies
+No match does not mean your project is free of such errors.
 
-apply = checked on your installed version and proof.auto_apply is true; lead = may apply, review first or show to a person; the reason for each is in --json.
+verdict  readiness  package         installed          checked on    entry                       grade     link
+-------  ---------  --------------  -----------------  ------------  --------------------------  --------  ------------------------------------------------------------
+apply    patch      pypi/click      8.5.0              8.5.0, 8.5.1  click.Parameter (0001)      verified  https://formachines.ai/errata/pypi/click/0001-click-parameter/
+lead     patch      pypi/scipy      >=1.17,<2 (range)  1.18.1        scipy.optimize.nnls (0001)  possible  https://formachines.ai/errata/pypi/scipy/0001-scipy-optimize-nnls/
+lead     lead       pypi/scipy      >=1.17,<2 (range)  1.18.1        scipy.linalg.sqrtm (0003)   possible  https://formachines.ai/errata/pypi/scipy/0003-scipy-linalg-sqrtm/
+lead     partial    npm/typeorm     1.1.2              1.1.2         Connection (0001)           verified  https://formachines.ai/errata/npm/typeorm/0001-connection/
+lead     lead       npm/typescript  7.0.2              7.0.2         ts.ScriptTarget (0001)      verified  https://formachines.ai/errata/npm/typescript/0001-baseurl/
 
-2 entries do not apply: the installed version predates the change (--all shows them).
+apply = checked on your installed version and proof.auto_apply is true; lead = may apply, review first or show to a person. readiness: patch = the short patch applies word for word; partial = it covers part of the change; lead = it does not apply word for word, the entry has a full example. Reasons are in --json.
 
-Not offered, merged or withdrawn (ids in --json): npm/typescript 6 merged, 5 withdrawn; pypi/openai 1 withdrawn; pypi/scipy 1 withdrawn
+1 entry does not apply: the installed version predates the change (--all shows them).
 
-6 requests, 64.6 kB, 0.31 s
+Not offered, merged or withdrawn (ids in --json): npm/typescript 4 merged, 8 withdrawn; pypi/openai 1 withdrawn; pypi/scipy 1 withdrawn
+
+6 requests, 65.8 kB, 0.31 s
 ```
 
-`--json` prints the same as one JSON object: every entry with `verdict`, `grade`, `reason`, `wrong`, `right`,
+`--json` prints the same as one JSON object: `summary` (the five counts and `note`) and `summary_lines`; every entry with `verdict`, `readiness`, `grade`, `reason`, `wrong`, `right`,
 `detect`, `error`, `fails_on`, `verified_on`, `url`; `not_offered` with ids and where merged entries went; `overhead`.
 
 ### Verdicts and grades
